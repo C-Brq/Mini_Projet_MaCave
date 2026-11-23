@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – Page introuvable</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            <h1>Page introuvable</h1>
+            <p class="discret">Cette page n'existe pas, ou elle ne fait pas partie de votre cave.</p>
+            <p><a href="{{ url_for('accueil') }}">Retour à l'accueil</a></p>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>

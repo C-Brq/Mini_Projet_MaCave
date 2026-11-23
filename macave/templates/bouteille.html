@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – {{ bouteille.vin.nom }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte carte-moyenne">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            <p class="petit">
+                {% if bouteille.est_en_stock() %}
+                <a href="{{ url_for('cave.liste_bouteilles') }}" class="discret">Retour à mes bouteilles</a>
+                {% else %}
+                <a href="{{ url_for('cave.historique') }}" class="discret">Retour à l'historique</a>
+                {% endif %}
+            </p>
+            <h1>{{ bouteille.vin.nom }}</h1>
+            <p class="discret">
+                <a href="{{ url_for('vins.fiche_vin', vin_id=bouteille.vin.id) }}" class="discret">{{ bouteille.vin.domaine }} · {{ bouteille.vin.type.libelle() }} · {{ bouteille.vin.millesime }} · {{ bouteille.vin.region }}</a>
+            </p>
+
+            <ul class="petit">
+                {% if bouteille.est_en_stock() %}
+                <li>Statut : <strong>en stock</strong>, sur l'étagère
+                    <a href="{{ url_for('cave.fiche_etagere', etagere_id=bouteille.etagere.id) }}">{{ bouteille.etagere.nom }}</a></li>
+                {% else %}
+                <li>Statut : <strong>archivée</strong> le {{ texte_date(bouteille.date_sortie) }}</li>
+                {% endif %}
+                <li>Prix d'achat : {{ texte_prix(bouteille.prix_achat) }}</li>
+                <li>Ajoutée à la cave le {{ texte_date(bouteille.date_ajout) }}</li>
+                <li>Note communautaire de ce vin : {{ texte_note(moyenne) }}{% if nb_evaluations %} ({{ nb_evaluations }}){% endif %}</li>
+            </ul>
+
+            {% if bouteille.est_en_stock() %}
+
+            <h2>Déplacer vers une autre étagère</h2>
+            {% if etageres_possibles %}
+            <form method="post" action="{{ url_for('cave.deplacer_bouteille', bouteille_id=bouteille.id) }}" class="formulaire">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="etagere">Étagère de destination</label>
+                    <select id="etagere" name="etagere">
+                        {% for valeur, texte in etageres_possibles %}
+                        <option value="{{ valeur }}">{{ texte }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="bouton">Déplacer</button>
+            </form>
+            {% else %}
+            <p class="discret petit">Vous n'avez pas d'autre étagère.</p>
+            {% endif %}
+
+            <h2>Modifier</h2>
+            <form method="post" action="{{ url_for('cave.modifier_bouteille', bouteille_id=bouteille.id) }}" class="formulaire">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="prix">Prix d'achat (€)</label>
+                    <input type="text" id="prix" name="prix" value="{{ bouteille.prix_achat }}">
+                </div>
+                <div class="champ">
+                    <label for="date_ajout">Date d'ajout</label>
+                    <input type="date" id="date_ajout" name="date_ajout" max="{{ aujourd_hui }}" value="{{ bouteille.date_ajout.isoformat() }}">
+                </div>
+                <button type="submit" class="bouton">Enregistrer</button>
+            </form>
+
+            <h2>Archiver après dégustation</h2>
+            <p class="discret petit">La bouteille quitte le stock (elle ne prend plus de place sur l'étagère) et reste dans votre historique. Votre note et votre commentaire sont visibles de tous sur la fiche du vin.</p>
+            <form method="post" action="{{ url_for('cave.archiver_bouteille', bouteille_id=bouteille.id) }}" class="formulaire">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="note">Note sur 20 (de 0 à 20)</label>
+                    <input type="text" id="note" name="note">
+                </div>
+                <div class="champ">
+                    <label for="commentaire">Commentaire (facultatif)</label>
+                    <textarea id="commentaire" name="commentaire" rows="3"></textarea>
+                </div>
+                <div class="champ">
+                    <label for="date_sortie">Date de la dégustation</label>
+                    <input type="date" id="date_sortie" name="date_sortie" min="{{ bouteille.date_ajout.isoformat() }}" max="{{ aujourd_hui }}" value="{{ aujourd_hui }}">
+                </div>
+                <button type="submit" class="bouton">Archiver</button>
+            </form>
+
+            <h2>Retirer définitivement</h2>
+            <p class="discret petit">La bouteille disparaît de votre cave, sans évaluation. Le vin reste dans le catalogue.</p>
+            {# Confirmation avant l'envoi #}
+            <form method="post" action="{{ url_for('cave.retirer_bouteille', bouteille_id=bouteille.id) }}" onsubmit="return confirm('Retirer définitivement cette bouteille de votre cave ?');">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-danger">Retirer la bouteille</button>
+            </form>
+
+            {% else %}
+
+            <h2>Mon évaluation</h2>
+            <form method="post" action="{{ url_for('cave.modifier_evaluation', bouteille_id=bouteille.id) }}" class="formulaire">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="note">Note sur 20 (de 0 à 20)</label>
+                    <input type="text" id="note" name="note" value="{{ bouteille.evaluation.note }}">
+                </div>
+                <div class="champ">
+                    <label for="commentaire">Commentaire (facultatif)</label>
+                    <textarea id="commentaire" name="commentaire" rows="3">{% if bouteille.evaluation.commentaire %}{{ bouteille.evaluation.commentaire }}{% endif %}</textarea>
+                </div>
+                <button type="submit" class="bouton">Enregistrer mon évaluation</button>
+            </form>
+
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – Mes étagères</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte carte-moyenne">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            <h1>Mes étagères</h1>
+
+            {% if cave.etageres %}
+            <ul>
+                {% for etagere in cave.etageres %}
+                <li>
+                    <a href="{{ url_for('cave.fiche_etagere', etagere_id=etagere.id) }}" class="bloc">
+                        <div class="ligne">
+                            <strong>{{ etagere.nom }}</strong>
+                            <span class="discret">{{ etagere.occupation }} / {{ etagere.capacite_max }} bouteilles</span>
+                        </div>
+                        {# Taux en pourcentage #}
+                        <p class="discret petit">{{ pourcentage_entier(etagere.taux_occupation()) }} % occupée</p>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="discret">Vous n'avez pas encore d'étagère. Créez la première avec le formulaire ci-dessous.</p>
+            {% endif %}
+
+            <h2>Nouvelle étagère</h2>
+            <form method="post" class="formulaire">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="nom">Nom de l'étagère</label>
+                    <input type="text" id="nom" name="nom">
+                </div>
+                <div class="champ">
+                    <label for="capacite">Capacité maximale (en bouteilles)</label>
+                    <input type="text" id="capacite" name="capacite">
+                </div>
+                <button type="submit" class="bouton">Créer l'étagère</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>

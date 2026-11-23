@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Image de fond de MaCave : une rangée de bouteilles sur une étagère, dans les tons rouge sombre.
+     C'est un dessin (du texte), pas une photo : il est léger et fonctionne sans internet.
+     Pour utiliser votre propre photo, voir static/style.css (ligne « background-image »). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+
+    <defs>
+        <!-- Un dégradé : rouge sombre au centre, noir sur les bords -->
+        <radialGradient id="lumiere" cx="50%" cy="40%" r="75%">
+            <stop offset="0%" stop-color="#5c121b"/>
+            <stop offset="55%" stop-color="#220609"/>
+            <stop offset="100%" stop-color="#000000"/>
+        </radialGradient>
+
+        <!-- Une bouteille (dessinée une seule fois, puis recopiée avec <use>) -->
+        <g id="bouteille">
+            <!-- le corps et le goulot -->
+            <path d="M0 90 Q0 45 25 25 L25 -110 L65 -110 L65 25 Q90 45 90 90 L90 330 Q90 350 70 350 L20 350 Q0 350 0 330 Z"
+                  fill="#2e0c12"/>
+            <!-- la capsule -->
+            <rect x="24" y="-125" width="42" height="40" rx="4" fill="#5a111b"/>
+            <!-- l'étiquette -->
+            <rect x="12" y="170" width="66" height="100" rx="5" fill="#44101a"/>
+            <!-- un reflet -->
+            <rect x="9" y="80" width="9" height="240" rx="4" fill="#ffffff" opacity="0.07"/>
+        </g>
+    </defs>
+
+    <!-- Le fond -->
+    <rect width="1600" height="900" fill="url(#lumiere)"/>
+
+    <!-- Quelques taches de lumière rouges -->
+    <circle cx="240" cy="170" r="130" fill="#e50914" opacity="0.06"/>
+    <circle cx="1320" cy="120" r="170" fill="#e50914" opacity="0.05"/>
+    <circle cx="820" cy="300" r="90" fill="#e50914" opacity="0.05"/>
+
+    <!-- La rangée de bouteilles -->
+    <use href="#bouteille" x="30" y="470"/>
+    <use href="#bouteille" x="150" y="470"/>
+    <use href="#bouteille" x="270" y="470"/>
+    <use href="#bouteille" x="390" y="470"/>
+    <use href="#bouteille" x="510" y="470"/>
+    <use href="#bouteille" x="630" y="470"/>
+    <use href="#bouteille" x="750" y="470"/>
+    <use href="#bouteille" x="870" y="470"/>
+    <use href="#bouteille" x="990" y="470"/>
+    <use href="#bouteille" x="1110" y="470"/>
+    <use href="#bouteille" x="1230" y="470"/>
+    <use href="#bouteille" x="1350" y="470"/>
+    <use href="#bouteille" x="1470" y="470"/>
+
+    <!-- La planche de l'étagère -->
+    <rect x="0" y="820" width="1600" height="30" fill="#1b0508"/>
+    <rect x="0" y="850" width="1600" height="50" fill="#000000"/>
+</svg>

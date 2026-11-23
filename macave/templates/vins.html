@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – Catalogue des vins</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte carte-grande">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="ligne">
+                <h1>Catalogue des vins</h1>
+                <div><a href="{{ url_for('vins.nouveau_vin') }}" class="bouton bouton-petit">Nouveau vin</a></div>
+            </div>
+            <p class="discret petit">Le catalogue est commun à tous les utilisateurs : un vin n'y figure qu'une seule fois, quel que soit le nombre de bouteilles détenues. Les vins sans note sont toujours placés en dernier dans un tri.</p>
+
+            {# Recherche en GET : les choix restent dans l'URL #}
+            <form method="get" class="recherche">
+                <div class="champ">
+                    <label for="q">Rechercher (nom ou domaine)</label>
+                    <input type="text" id="q" name="q" value="{{ q }}">
+                </div>
+                <div class="champ">
+                    <label for="type">Type</label>
+                    <select id="type" name="type">
+                        <option value="">Tous les types</option>
+                        {% for valeur, texte in types %}
+                        <option value="{{ valeur }}" {% if valeur == type_vin %}selected{% endif %}>{{ texte }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="champ">
+                    <label for="tri">Trier par</label>
+                    <select id="tri" name="tri">
+                        <option value="">Ordre d'origine</option>
+                        {% for valeur, texte in tris %}
+                        <option value="{{ valeur }}" {% if valeur == tri %}selected{% endif %}>{{ texte }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="champ">
+                    <label for="sens">Sens</label>
+                    <select id="sens" name="sens">
+                        {% for valeur, texte in sens_possibles %}
+                        <option value="{{ valeur }}" {% if valeur == sens %}selected{% endif %}>{{ texte }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="bouton">Appliquer</button>
+            </form>
+
+            {% if lignes %}
+            <table class="liste">
+                <thead>
+                    <tr>
+                        <th>Domaine</th>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Millésime</th>
+                        <th>Région</th>
+                        <th>Note communautaire</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ligne in lignes %}
+                    <tr>
+                        <td>{{ ligne.vin.domaine }}</td>
+                        <td><a href="{{ url_for('vins.fiche_vin', vin_id=ligne.vin.id) }}">{{ ligne.vin.nom }}</a></td>
+                        <td>{{ ligne.vin.type.libelle() }}</td>
+                        <td>{{ ligne.vin.millesime }}</td>
+                        <td>{{ ligne.vin.region }}</td>
+                        <td>{{ texte_note(ligne.moyenne) }}{% if ligne.nb_evaluations %} <span class="discret">({{ ligne.nb_evaluations }})</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% elif q or type_vin %}
+            <p class="discret">Aucun vin ne correspond à cette recherche.</p>
+            {% else %}
+            <p class="discret">Le catalogue est vide. Ajoutez le premier vin avec le bouton « Nouveau vin ».</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>

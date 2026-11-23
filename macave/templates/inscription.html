@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – Inscription</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            {# erreurs : un message par champ refusé #}
+            <h1>S'inscrire</h1>
+
+            <form method="post">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="identifiant">Identifiant</label>
+                    <input type="text" id="identifiant" name="identifiant" value="{{ valeurs.identifiant }}"
+                           {% if erreurs.identifiant %}class="invalide"{% endif %}>
+                    {% if erreurs.identifiant %}<p class="erreur-champ">{{ erreurs.identifiant }}</p>{% endif %}
+                </div>
+
+                <div class="champ">
+                    <label for="email">Adresse e-mail</label>
+                    <input type="text" id="email" name="email" value="{{ valeurs.email }}"
+                           {% if erreurs.email %}class="invalide"{% endif %}>
+                    {% if erreurs.email %}<p class="erreur-champ">{{ erreurs.email }}</p>{% endif %}
+                </div>
+
+                <div class="champ">
+                    <label for="mot_de_passe">Mot de passe</label>
+                    <input type="password" id="mot_de_passe" name="mot_de_passe"
+                           {% if erreurs.mot_de_passe %}class="invalide"{% endif %}>
+                    {% if erreurs.mot_de_passe %}
+                    <p class="erreur-champ">{{ erreurs.mot_de_passe }}</p>
+                    {% else %}
+                    <p class="aide-champ">8 caractères minimum.</p>
+                    {% endif %}
+                </div>
+
+                <div class="champ">
+                    <label for="confirmation">Confirmer le mot de passe</label>
+                    <input type="password" id="confirmation" name="confirmation"
+                           {% if erreurs.confirmation %}class="invalide"{% endif %}>
+                    {% if erreurs.confirmation %}<p class="erreur-champ">{{ erreurs.confirmation }}</p>{% endif %}
+                </div>
+
+                <button type="submit" class="bouton bouton-large">Créer mon compte</button>
+            </form>
+
+            <p class="discret petit apres-formulaire">Déjà inscrit sur MaCave ? <a href="{{ url_for('auth.connexion') }}">Connectez-vous.</a></p>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>

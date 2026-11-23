@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – Tableau de bord</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte carte-moyenne">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            {# Chiffres calculés dans app.py #}
+            <h1>Tableau de bord</h1>
+            <p class="discret">Bonjour <strong>{{ g.utilisateur.identifiant }}</strong>, voici l'état de votre cave.</p>
+
+            <div class="grille">
+                <div class="bloc">
+                    <p class="chiffre">{{ nb_bouteilles }}</p>
+                    <p class="legende">bouteilles en stock</p>
+                </div>
+                <div class="bloc">
+                    <p class="chiffre">{{ nb_references }}</p>
+                    <p class="legende">références distinctes</p>
+                </div>
+                <div class="bloc">
+                    <p class="chiffre">{{ nb_etageres }}</p>
+                    <p class="legende">étagères</p>
+                </div>
+                <div class="bloc">
+                    {# Vide sans étagère : pas de division par zéro #}
+                    {% if texte_occupation %}
+                    <p class="chiffre">{{ texte_occupation }}</p>
+                    <p class="legende">occupation globale ({{ nb_bouteilles }} / {{ capacite_totale }})</p>
+                    {% else %}
+                    <p class="chiffre-texte">Aucune étagère</p>
+                    <p class="legende">occupation globale non calculable</p>
+                    {% endif %}
+                </div>
+                <div class="bloc">
+                    <p class="chiffre">{{ valeur_stock }}</p>
+                    <p class="legende">valeur du stock (prix d'achat)</p>
+                </div>
+                <div class="bloc">
+                    <p class="chiffre">{{ nb_degustations }}</p>
+                    <p class="legende">dégustations dans l'historique</p>
+                </div>
+            </div>
+
+            {% if nb_etageres == 0 %}
+            <p class="discret petit apres-formulaire">Pour commencer, <a href="{{ url_for('cave.liste_etageres') }}">créez une étagère</a>, puis ajoutez-y des bouteilles depuis le <a href="{{ url_for('vins.liste_vins') }}">catalogue des vins</a>.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>

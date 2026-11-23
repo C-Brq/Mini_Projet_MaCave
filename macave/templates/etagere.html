@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MaCave – {{ etagere.nom }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+
+    <!-- En-tête et menu -->
+    <div class="entete">
+        <a href="{{ url_for('accueil') }}" class="logo">MaCave</a>
+        {% if g.utilisateur %}
+        <div class="menu">
+            <a href="{{ url_for('cave.liste_etageres') }}">Étagères</a>
+            <a href="{{ url_for('cave.liste_bouteilles') }}">Bouteilles</a>
+            <a href="{{ url_for('vins.liste_vins') }}">Vins</a>
+            <a href="{{ url_for('cave.historique') }}">Historique</a>
+            <a href="{{ url_for('cave.profil') }}">{{ g.utilisateur.identifiant }}</a>
+            <form method="post" action="{{ url_for('auth.deconnexion') }}">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-petit">Déconnexion</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="menu">
+            <a href="{{ url_for('auth.connexion') }}" class="bouton bouton-petit">Connexion</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Contenu -->
+    <div class="contenu">
+        <div class="carte carte-moyenne">
+
+            {# Messages flash #}
+            {% for categorie, message in get_flashed_messages(with_categories=true) %}
+                {% if categorie == "erreur" %}
+                <div class="message message-erreur">{{ message }}</div>
+                {% else %}
+                <div class="message message-succes">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+
+            <p class="petit"><a href="{{ url_for('cave.liste_etageres') }}" class="discret">Retour à mes étagères</a></p>
+            <h1>{{ etagere.nom }}</h1>
+            <p class="discret">{{ etagere.occupation }} / {{ etagere.capacite_max }} bouteilles ({{ pourcentage_entier(etagere.taux_occupation()) }} % occupée)</p>
+
+            <h2>Bouteilles en stock</h2>
+            {% if etagere.bouteilles %}
+            <table class="liste">
+                <thead>
+                    <tr>
+                        <th>Vin</th>
+                        <th>Millésime</th>
+                        <th>Prix d'achat</th>
+                        <th>Ajoutée le</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bouteille in etagere.bouteilles %}
+                    <tr>
+                        <td>{{ bouteille.vin.nom }} <span class="discret">({{ bouteille.vin.domaine }})</span></td>
+                        <td>{{ bouteille.vin.millesime }}</td>
+                        <td>{{ texte_prix(bouteille.prix_achat) }}</td>
+                        <td>{{ texte_date(bouteille.date_ajout) }}</td>
+                        <td><a href="{{ url_for('cave.fiche_bouteille', bouteille_id=bouteille.id) }}">Voir</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="discret">Cette étagère est vide.</p>
+            {% endif %}
+
+            <h2>Modifier l'étagère</h2>
+            <form method="post" action="{{ url_for('cave.modifier_etagere', etagere_id=etagere.id) }}" class="formulaire">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <div class="champ">
+                    <label for="nom">Nom de l'étagère</label>
+                    <input type="text" id="nom" name="nom" value="{{ etagere.nom }}">
+                </div>
+                <div class="champ">
+                    <label for="capacite">Capacité maximale (en bouteilles)</label>
+                    <input type="text" id="capacite" name="capacite" value="{{ etagere.capacite_max }}">
+                </div>
+                <button type="submit" class="bouton">Enregistrer</button>
+            </form>
+
+            <h2>Supprimer l'étagère</h2>
+            <p class="discret petit">Une étagère ne peut être supprimée que si elle est vide.</p>
+            {# Confirmation avant l'envoi #}
+            <form method="post" action="{{ url_for('cave.supprimer_etagere', etagere_id=etagere.id) }}" onsubmit="return confirm('Supprimer cette étagère ?');">
+                <input type="hidden" name="csrf" value="{{ jeton_csrf() }}">
+                <button type="submit" class="bouton bouton-danger">Supprimer l'étagère</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="pied">
+    </div>
+
+</body>
+</html>
